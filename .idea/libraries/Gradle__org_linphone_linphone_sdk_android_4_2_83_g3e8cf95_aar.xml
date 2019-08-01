@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: org.linphone:linphone-sdk-android:4.2-83-g3e8cf95@aar">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/3e1219c1c3bab1d447094e495f4b95c7/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/3e1219c1c3bab1d447094e495f4b95c7/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.linphone/linphone-sdk-android/4.2-83-g3e8cf95/cff5a97df526c75be859a336c574f830b71851af/linphone-sdk-android-4.2-83-g3e8cf95-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>

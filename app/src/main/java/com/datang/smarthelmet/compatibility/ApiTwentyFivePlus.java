@@ -1,0 +1,91 @@
+package com.datang.smarthelmet.compatibility;
+
+/*
+ApiTwentyFivePlus.java
+Copyright (C) 2019 Belledonne Communications, Grenoble, France
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
+import static java.lang.Math.min;
+
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.pm.ShortcutInfo;
+import android.content.pm.ShortcutManager;
+import com.datang.smarthelmet.SmartHelmetManager;
+import com.datang.smarthelmet.contacts.ContactsManager;
+import com.datang.smarthelmet.contacts.SmartHelmetContact;
+import com.datang.smarthelmet.settings.LinphonePreferences;
+import com.datang.smarthelmet.utils.SmartHelmetShortcutManager;
+import java.util.ArrayList;
+import org.linphone.core.Address;
+import org.linphone.core.ChatRoom;
+import org.linphone.core.ChatRoomCapabilities;
+import org.linphone.core.tools.Log;
+
+@TargetApi(25)
+class ApiTwentyFivePlus {
+
+    public static void removeChatShortcuts(Context context) {
+        ShortcutManager shortcutManager =
+                (ShortcutManager) context.getSystemService(Context.SHORTCUT_SERVICE);
+        shortcutManager.removeAllDynamicShortcuts();
+    }
+
+    public static void createChatShortcuts(Context context) {
+        if (!LinphonePreferences.instance().shortcutsCreationEnabled()) return;
+
+        SmartHelmetShortcutManager manager = new SmartHelmetShortcutManager(context);
+        ShortcutManager shortcutManager =
+                (ShortcutManager) context.getSystemService(Context.SHORTCUT_SERVICE);
+        ArrayList<ShortcutInfo> shortcuts = new ArrayList<>();
+
+        ChatRoom[] rooms = SmartHelmetManager.getCore().getChatRooms();
+
+        int i = 0;
+        int maxShortcuts = min(rooms.length, shortcutManager.getMaxShortcutCountPerActivity());
+        ArrayList<SmartHelmetContact> contacts = new ArrayList<>();
+        for (ChatRoom room : rooms) {
+            // Android can only have around 4-5 shortcuts at a time
+            if (i >= maxShortcuts) break;
+
+            Address participantAddress =
+                    room.hasCapability(ChatRoomCapabilities.Basic.toInt())
+                            ? room.getPeerAddress()
+                            : room.getParticipants()[0].getAddress();
+            SmartHelmetContact contact =
+                    ContactsManager.getInstance().findContactFromAddress(participantAddress);
+
+            if (contact != null && !contacts.contains(contact)) {
+                String peerAddress = room.getPeerAddress().asStringUriOnly();
+                ShortcutInfo shortcut = manager.createChatRoomShortcutInfo(contact, peerAddress);
+                if (shortcut != null) {
+                    Log.i(
+                            "[Shortcut] Creating launcher shortcut "
+                                    + shortcut.getShortLabel()
+                                    + " for room "
+                                    + shortcut.getId());
+                    shortcuts.add(shortcut);
+                    contacts.add(contact);
+                    i += 1;
+                }
+            }
+        }
+
+        shortcutManager.setDynamicShortcuts(shortcuts);
+        manager.destroy();
+    }
+}
